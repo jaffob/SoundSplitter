@@ -20,7 +20,7 @@ typedef struct
 	unsigned short fmtBlockAlign;
 	unsigned short fmtBitsPerSample;
 
-	unsigned int dataSubchunk2ID;
+	char dataSubchunk2ID[4];
 	unsigned int dataSubchunk2Size;
 } WavHeader;
 
@@ -38,20 +38,21 @@ public:
 	
 private:
 
-	size_t nSamples;
+	unsigned int nSamples;
 	unsigned int sampleRate;
-	bool bStereo;
+	unsigned short nChannels;
 
 public:
 
-	WavData(size_t sampleCount, unsigned int sampleRate, bool stereo);
+	WavData(unsigned int numSamples, unsigned int sampleRate, unsigned short numChannels);
 	WavData(const char *filename);
 
 	bool loadFile(const char *filename);
 	bool saveFile(char *filename);
 
-	size_t getSampleCount();
-	bool isStereo();
+	unsigned int getNumSamples();
+	unsigned int getSampleRate();
+	unsigned short getNumChannels();
 
 	bool checkHeaderValid(WavHeader hdr);
 };

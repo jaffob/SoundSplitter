@@ -7,6 +7,7 @@
 int main()
 {
 	WavData wave = WavData("C:\\Users\\Jack\\Desktop\\moooo.wav");
+	while (true) {};
     return 0;
 }
 

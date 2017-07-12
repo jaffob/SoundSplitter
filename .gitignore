@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+SoundSplitter.VC.opendb
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

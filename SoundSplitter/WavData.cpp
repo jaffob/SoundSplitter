@@ -23,10 +23,18 @@ bool WavData::loadFile(const char * filename)
 
 	// Read the header data.
 	size_t nHdrBytesRead = fread(&hdr, 1, sizeof(WavHeader), wavFile);
-	if (nHdrBytesRead < sizeof(WavHeader)) return false;
+	if (nHdrBytesRead < sizeof(WavHeader))
+	{
+		fclose(wavFile);
+		return false;
+	}
 
 	// Make sure the header is valid and supported.
-	if (!checkHeaderValid(hdr)) return false;
+	if (!checkHeaderValid(hdr))
+	{
+		fclose(wavFile);
+		return false;
+	}
 
 	// Set our instance variables based on the header.
 	nSamples = hdr.dataSubchunk2Size / (hdr.fmtNumChannels * hdr.fmtBitsPerSample / 8);
@@ -37,14 +45,51 @@ bool WavData::loadFile(const char * filename)
 	samples = (short *)malloc(hdr.dataSubchunk2Size);
 	size_t nDataBytesRead = fread(samples, 1, hdr.dataSubchunk2Size, wavFile);
 
-	if (nDataBytesRead < hdr.dataSubchunk2Size) return false;
+	fclose(wavFile);
+	return nDataBytesRead == hdr.dataSubchunk2Size;
 
-	return true;
 }
 
 bool WavData::saveFile(char * filename)
 {
-	return false;
+	FILE *wavFile;
+	WavHeader hdr;
+
+	// Set header values.
+
+	strncpy(hdr.riffChunkID, "RIFF", 4);
+	hdr.riffChunkSize = 36 + (nSamples * nChannels * 2);
+	strncpy(hdr.riffFormat, "WAVE", 4);
+
+	strncpy(hdr.fmtSubchunk1ID, "fmt ", 4);
+	hdr.fmtSubchunk1Size = 16;
+	hdr.fmtAudioFormat = 1;
+	hdr.fmtNumChannels = nChannels;
+	hdr.fmtSampleRate = sampleRate;
+	hdr.fmtByteRate = sampleRate * nChannels * 2;
+	hdr.fmtBlockAlign = nChannels * 2;
+	hdr.fmtBitsPerSample = 16;
+
+	strncpy(hdr.dataSubchunk2ID, "data", 4);
+	hdr.dataSubchunk2Size = nSamples * nChannels * 2;
+
+	// Create/open file for writing.
+	wavFile = fopen(filename, "wb");
+	if (!wavFile) return false;
+
+	// Write the header.
+	size_t nHdrBytesWritten = fwrite(&hdr, 1, sizeof(WavHeader), wavFile);
+	if (nHdrBytesWritten < sizeof(WavHeader))
+	{
+		fclose(wavFile);
+		return false;
+	}
+
+	// Write the sample data.
+	size_t nDataBytesWritten = fwrite(samples, 1, hdr.dataSubchunk2Size, wavFile);
+
+	fclose(wavFile);
+	return nDataBytesWritten == hdr.dataSubchunk2Size;
 }
 
 size_t WavData::getNumSamples()
